@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Servis Tyres HR Portal</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="theme-color" content="#cc0000">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Servis HR">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #b80000 0%, #cc0000 40%, #1a1a1a 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .login-container {
+      background: #fff;
+      border-radius: 20px;
+      padding: 40px 32px;
+      width: 90%;
+      max-width: 380px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+      text-align: center;
+    }
+    .logo-wrap {
+      margin-bottom: 24px;
+    }
+    .logo-wrap img {
+      height: 80px;
+      object-fit: contain;
+      border: none;
+      outline: none;
+      background: transparent;
+    }
+    h1 {
+      font-size: 1.1rem;
+      color: #333;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+    .subtitle {
+      font-size: 0.8rem;
+      color: #999;
+      margin-bottom: 32px;
+    }
+    .input-group {
+      margin-bottom: 18px;
+      text-align: left;
+    }
+    label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    input {
+      width: 100%;
+      padding: 13px 16px;
+      border: 2px solid #e8e8e8;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      color: #333;
+      transition: border 0.2s;
+      outline: none;
+      background: #fafafa;
+    }
+    input:focus {
+      border-color: #cc0000;
+      background: #fff;
+    }
+    .btn-login {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #cc0000, #990000);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      margin-top: 8px;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    .btn-login:active { transform: scale(0.98); opacity: 0.9; }
+    .error-msg {
+      color: #cc0000;
+      font-size: 0.82rem;
+      margin-top: 14px;
+      padding: 10px;
+      background: #fff0f0;
+      border-radius: 8px;
+      display: none;
+    }
+    .footer-note {
+      margin-top: 24px;
+      font-size: 0.72rem;
+      color: #bbb;
+    }
+
+    /* === INSTALL APP POPUP === */
+    .install-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(3px);
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.3s ease;
+    }
+    .install-overlay.show { display: flex; }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .install-modal {
+      background: #fff;
+      border-radius: 20px;
+      padding: 28px 24px;
+      width: 88%;
+      max-width: 340px;
+      text-align: center;
+      animation: slideUp 0.35s ease;
+      box-shadow: 0 25px 80px rgba(0,0,0,0.4);
+    }
+    @keyframes slideUp {
+      from { transform: translateY(40px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .install-modal .app-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      margin: 0 auto 16px;
+      object-fit: cover;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+    .install-modal h3 {
+      font-size: 1.15rem;
+      color: #222;
+      margin-bottom: 6px;
+    }
+    .install-modal p {
+      font-size: 0.85rem;
+      color: #777;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    .install-btn {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #cc0000, #990000);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+    .install-btn:active { transform: scale(0.97); }
+    .install-later {
+      background: none;
+      border: none;
+      color: #999;
+      font-size: 0.85rem;
+      cursor: pointer;
+      padding: 8px;
+    }
+    .ios-steps {
+      display: none;
+      text-align: left;
+      background: #f8f8f8;
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 16px;
+    }
+    .ios-steps ol {
+      padding-left: 18px;
+      font-size: 0.82rem;
+      color: #555;
+      line-height: 1.8;
+    }
+    .ios-steps li span { color: #cc0000; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="logo-wrap">
+      <img src="LOGO.jpg" alt="Servis Tyres">
+    </div>
+    <h1>Employee Self Service</h1>
+    <p class="subtitle">HR Portal &middot; Servis Tyres</p>
+
+    <div class="input-group">
+      <label>Employee ID</label>
+      <input type="text" id="empId" placeholder="Enter your Employee ID" autocomplete="off">
+    </div>
+    <div class="input-group">
+      <label>Password</label>
+      <input type="password" id="password" placeholder="Enter your password">
+    </div>
+    <button class="btn-login" onclick="doLogin()">Login</button>
+    <div class="error-msg" id="errorMsg">Invalid Employee ID or Password. Please try again.</div>
+    <p class="footer-note">Password is same as your Employee ID</p>
+  </div>
+
+  <!-- === INSTALL APP POPUP === -->
+  <div class="install-overlay" id="installOverlay">
+    <div class="install-modal">
+      <img class="app-icon" src="LOGO.jpg" alt="Servis Tyres">
+      <h3>Install Servis Tyres HR</h3>
+      <p>Add this app to your home screen for quick access</p>
+
+      <!-- Android/Chrome install -->
+      <div id="androidInstall">
+        <button class="install-btn" id="installBtn">Install App</button>
+        <button class="install-later" onclick="dismissInstall()">Not Now</button>
+      </div>
+
+      <!-- iOS steps (shown on iPhone/iPad) -->
+      <div class="ios-steps" id="iosInstall">
+        <ol>
+          <li>Tap the <span>Share</span> button <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#007AFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg> below</li>
+          <li>Scroll and tap <span>Add to Home Screen</span></li>
+          <li>Tap <span>Add</span> in the top right</li>
+        </ol>
+        <button class="install-later" onclick="dismissInstall()" style="display:block;margin:10px auto 0;">Got it</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== SERVICE WORKER =====
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(()=>{});
+    }
+
+    // ===== LOGIN =====
+    async function doLogin() {
+      const empId = document.getElementById('empId').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const errEl = document.getElementById('errorMsg');
+      errEl.style.display = 'none';
+
+      if (!empId || !password) {
+        errEl.textContent = 'Please enter Employee ID and Password.';
+        errEl.style.display = 'block'; return;
+      }
+      if (empId !== password) {
+        errEl.textContent = 'Invalid credentials. Password must match Employee ID.';
+        errEl.style.display = 'block'; return;
+      }
+      try {
+        const res = await fetch('./leave_data.json');
+        const data = await res.json();
+        if (!data[empId]) {
+          errEl.textContent = 'Employee ID not found in system.';
+          errEl.style.display = 'block'; return;
+        }
+        sessionStorage.setItem('loggedEmpId', empId);
+        sessionStorage.setItem('loggedEmpName', data[empId].emp_name);
+        window.location.href = './dashboard.html';
+      } catch(e) {
+        errEl.textContent = 'Error connecting to data. Please try again.';
+        errEl.style.display = 'block';
+      }
+    }
+    document.addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+
+    // ===== INSTALL APP POPUP =====
+    let deferredPrompt = null;
+
+    // Check if already installed (standalone mode)
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                         window.navigator.standalone === true;
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+    // Listen for install prompt (Android/Chrome)
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      // Show popup after short delay
+      setTimeout(() => {
+        if (!isStandalone) showInstallPopup();
+      }, 2000);
+    });
+
+    // For iOS - show popup after delay since no beforeinstallprompt
+    if (isIOS && !isStandalone) {
+      setTimeout(showInstallPopup, 3000);
+    }
+
+    // Also show popup after 5 seconds as fallback (if not dismissed before)
+    setTimeout(() => {
+      if (!isStandalone && !localStorage.getItem('installDismissed')) {
+        showInstallPopup();
+      }
+    }, 5000);
+
+    function showInstallPopup() {
+      if (localStorage.getItem('installDismissed')) return;
+      const overlay = document.getElementById('installOverlay');
+      const androidDiv = document.getElementById('androidInstall');
+      const iosDiv = document.getElementById('iosInstall');
+
+      if (isIOS) {
+        androidDiv.style.display = 'none';
+        iosDiv.style.display = 'block';
+      } else {
+        androidDiv.style.display = 'block';
+        iosDiv.style.display = 'none';
+      }
+      overlay.classList.add('show');
+    }
+
+    function dismissInstall() {
+      document.getElementById('installOverlay').classList.remove('show');
+      localStorage.setItem('installDismissed', 'true');
+    }
+
+    // Handle install button click (Android/Chrome)
+    document.getElementById('installBtn').addEventListener('click', async () => {
+      if (!deferredPrompt) {
+        dismissInstall();
+        return;
+      }
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      dismissInstall();
+      if (outcome === 'accepted') {
+        console.log('App installed');
+      }
+    });
+  </script>
+</body>
+</html>
