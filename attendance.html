@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Attendance - Servis HR</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#cc0000">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f4f6; min-height: 100vh; }
+    header {
+      background: linear-gradient(135deg, #cc0000, #990000);
+      color: #fff; padding: 14px 20px;
+      display: flex; align-items: center; gap: 14px; position: sticky; top: 0; z-index: 10;
+    }
+    .back-btn {
+      background: rgba(255,255,255,0.2); border: none; color: #fff;
+      width: 36px; height: 36px; border-radius: 8px; font-size: 1.1rem;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .header-info { flex: 1; }
+    .header-info h2 { font-size: 1rem; font-weight: 700; }
+    .header-info p { font-size: 0.75rem; opacity: 0.8; margin-top: 2px; }
+    header img { height: 38px; }
+
+    .main { padding: 16px 16px 80px; max-width: 600px; margin: 0 auto; }
+
+    .info-card {
+      background: #fff; border-radius: 14px; padding: 16px 18px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 14px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    }
+    .info-item .lbl { font-size: 0.7rem; color: #aaa; font-weight: 600; text-transform: uppercase; }
+    .info-item .val { font-size: 0.88rem; color: #222; font-weight: 600; margin-top: 2px; }
+
+    .stats-row {
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 14px;
+    }
+    .stat-box {
+      background: #fff; border-radius: 12px; padding: 14px 10px; text-align: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+    }
+    .stat-num { font-size: 1.5rem; font-weight: 800; margin-bottom: 4px; }
+    .stat-num.present { color: #27ae60; }
+    .stat-num.absent { color: #cc0000; }
+    .stat-num.total { color: #333; }
+    .stat-lbl { font-size: 0.68rem; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+
+    .records-title {
+      font-size: 0.78rem; font-weight: 700; color: #555;
+      text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; padding-left: 4px;
+    }
+    .att-record {
+      background: #fff; border-radius: 12px; margin-bottom: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow: hidden;
+      display: grid; grid-template-columns: 1fr auto; align-items: center;
+    }
+    .rec-status { display: none; }
+    .rec-body { padding: 12px 14px; }
+    .rec-date { font-size: 0.82rem; font-weight: 700; color: #222; }
+    .rec-times { font-size: 0.72rem; color: #888; margin-top: 3px; }
+    .rec-remark {
+      font-size: 0.68rem; color: #aaa; margin-top: 3px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;
+    }
+    .rec-hours {
+      padding: 12px 14px; text-align: right; flex-shrink: 0;
+    }
+    .rec-hours .hrs { font-size: 0.9rem; font-weight: 700; color: #333; }
+    .rec-hours .ot { font-size: 0.68rem; color: #f39c12; margin-top: 2px; }
+
+    .fab-download {
+      position: fixed; bottom: 20px; right: 20px;
+      background: linear-gradient(135deg, #cc0000, #990000);
+      color: #fff; border: none; border-radius: 50px;
+      padding: 14px 22px; font-size: 0.9rem; font-weight: 700;
+      cursor: pointer; box-shadow: 0 6px 20px rgba(204,0,0,0.4);
+      display: flex; align-items: center; gap: 8px; z-index: 100;
+    }
+    .loading { text-align: center; padding: 60px 20px; color: #aaa; }
+  </style>
+</head>
+<body>
+  <header>
+    <button class="back-btn" onclick="window.location.href='dashboard.html'">←</button>
+    <div class="header-info">
+      <h2>Attendance Report</h2>
+      <p id="hdrEmpInfo">Loading...</p>
+    </div>
+    <img src="data:image/jpeg;base64,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" alt="Servis">
+  </header>
+
+  <div class="main" id="mainContent">
+    <div class="loading">Loading attendance data...</div>
+  </div>
+  <button class="fab-download" id="fabBtn" style="display:none;" onclick="downloadPDF()">⬇ Download PDF</button>
+
+  <script>
+    const empId = sessionStorage.getItem('loggedEmpId');
+    if (!empId) { window.location.href = './index.html'; }
+
+    let empData = null;
+
+    async function loadData() {
+      try {
+        const res = await fetch('./attendance_data.json?v=' + Date.now(), { cache: 'no-store' });
+        const all = await res.json();
+        empData = all[empId];
+        if (!empData) {
+          document.getElementById('mainContent').innerHTML = '<div class="loading">No attendance data found for your Employee ID.</div>';
+          return;
+        }
+        renderAttendance();
+      } catch(e) {
+        document.getElementById('mainContent').innerHTML = '<div class="loading">Error loading data. Please try again.</div>';
+      }
+    }
+
+    function renderAttendance() {
+      const d = empData;
+      // Support both old format and new compressed format
+      const empName = d.emp_name || d.n;
+      const position = d.position || d.p;
+      const department = d.department || d.d;
+      // Convert compressed records to objects
+      const records = (d.records || d.r || []).map(r => {
+        if (Array.isArray(r)) {
+          return { date:r[0], emp_in:r[1], emp_out:r[2], actual_hours:r[3], calc_overtime:r[4], remarks:r[5] };
+        }
+        return r;
+      });
+
+      document.getElementById('hdrEmpInfo').textContent = empName + ' · ' + empId;
+      document.getElementById('fabBtn').style.display = 'flex';
+
+      const presentDays = records.filter(r => r.emp_in && r.emp_in.trim()).length;
+      const absentDays = records.filter(r => !r.emp_in || !r.emp_in.trim()).length;
+      const totalDays = records.length;
+
+      let recordsHTML = records.map(r => {
+        const isPresent = r.emp_in && r.emp_in.trim();
+        const statusClass = isPresent ? 'present' : 'absent';
+        const inTime = r.emp_in || '--:--';
+        const outTime = r.emp_out || '--:--';
+        const hours = r.actual_hours || '--';
+        const ot = r.calc_overtime && r.calc_overtime !== '0:0' && r.calc_overtime !== '00:00' ? 'OT: ' + r.calc_overtime : '';
+        const remark = r.remarks || '';
+        return `
+          <div class="att-record">
+            <div class="rec-status ${statusClass}"></div>
+            <div class="rec-body">
+              <div class="rec-date">${r.date}</div>
+              <div class="rec-times">In: ${inTime} &nbsp;|&nbsp; Out: ${outTime}</div>
+              ${remark ? `<div class="rec-remark">${remark}</div>` : ''}
+            </div>
+            <div class="rec-hours">
+              <div class="hrs">${hours}</div>
+              ${ot ? `<div class="ot">${ot}</div>` : ''}
+            </div>
+          </div>`;
+      }).join('');
+
+      document.getElementById('mainContent').innerHTML = `
+        <div class="info-card">
+          <div class="info-item"><div class="lbl">Emp ID</div><div class="val">${empId}</div></div>
+          <div class="info-item"><div class="lbl">Name</div><div class="val">${empName}</div></div>
+          <div class="info-item"><div class="lbl">Position</div><div class="val">${position}</div></div>
+          <div class="info-item"><div class="lbl">Department</div><div class="val">${department}</div></div>
+        </div>
+        <div class="stats-row">
+          <div class="stat-box"><div class="stat-num total">${totalDays}</div><div class="stat-lbl">Total Days</div></div>
+          <div class="stat-box"><div class="stat-num present">${presentDays}</div><div class="stat-lbl">Present</div></div>
+          <div class="stat-box"><div class="stat-num absent">${absentDays}</div><div class="stat-lbl">Absent</div></div>
+        </div>
+        <p class="records-title">Attendance Records</p>
+        ${recordsHTML}
+      `;
+    }
+
+    function downloadPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const d = empData;
+      const empName2 = d.emp_name || d.n;
+      const position2 = d.position || d.p;
+      const department2 = d.department || d.d;
+      const records = (d.records || d.r || []).map(r => {
+        if (Array.isArray(r)) return { date:r[0], emp_in:r[1], emp_out:r[2], actual_hours:r[3], calc_overtime:r[4], remarks:r[5] };
+        return r;
+      });
+
+      // Header
+      doc.setFillColor(204, 0, 0);
+      doc.rect(0, 0, 210, 32, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(16); doc.setFont('helvetica', 'bold');
+      doc.text('SERVIS TYRES', 105, 12, { align: 'center' });
+      doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+      doc.text('Attendance Report', 105, 20, { align: 'center' });
+      doc.setFontSize(8);
+      doc.text('Generated: ' + new Date().toLocaleDateString('en-PK', {day:'2-digit',month:'short',year:'numeric'}), 105, 28, { align: 'center' });
+
+      // Employee info
+      doc.setFillColor(248, 248, 248);
+      doc.roundedRect(14, 38, 182, 30, 3, 3, 'F');
+      doc.setTextColor(100,100,100); doc.setFont('helvetica','bold'); doc.setFontSize(8);
+      doc.text('EMPLOYEE INFORMATION', 20, 46);
+      doc.setFont('helvetica','normal'); doc.setTextColor(30,30,30); doc.setFontSize(9);
+      doc.setFont('helvetica','bold'); doc.text('Emp ID:', 20, 55);
+      doc.setFont('helvetica','normal'); doc.text(empId, 44, 55);
+      doc.setFont('helvetica','bold'); doc.text('Name:', 110, 55);
+      doc.setFont('helvetica','normal'); doc.text(empName2, 126, 55);
+      doc.setFont('helvetica','bold'); doc.text('Position:', 20, 64);
+      doc.setFont('helvetica','normal'); doc.text(position2, 44, 64);
+      doc.setFont('helvetica','bold'); doc.text('Dept:', 110, 64);
+      doc.setFont('helvetica','normal'); doc.text(department2, 126, 64);
+
+      // Stats
+      const presentDays = records.filter(r=>r.emp_in&&r.emp_in.trim()).length;
+      const absentDays = records.length - presentDays;
+      const statBoxes = [
+        { label:'Total Days', val: records.length, color:[60,60,60] },
+        { label:'Present', val: presentDays, color:[39,174,96] },
+        { label:'Absent', val: absentDays, color:[204,0,0] },
+      ];
+      statBoxes.forEach((s,i) => {
+        const x = 14 + i*62;
+        doc.setFillColor(...s.color);
+        doc.roundedRect(x, 74, 56, 18, 3, 3, 'F');
+        doc.setTextColor(255,255,255);
+        doc.setFont('helvetica','bold'); doc.setFontSize(14);
+        doc.text(String(s.val), x+28, 85, {align:'center'});
+        doc.setFontSize(7); doc.setFont('helvetica','normal');
+        doc.text(s.label, x+28, 89, {align:'center'});
+      });
+
+      // Table header
+      doc.setFillColor(204,0,0);
+      doc.rect(14, 98, 182, 8, 'F');
+      doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(7.5);
+      const cols = [17, 45, 82, 112, 145, 163];
+      const hdrs = ['Emp ID','Date','In Time','Out Time','Hrs','Remarks'];
+      hdrs.forEach((h,i) => doc.text(h, cols[i], 104));
+
+      let y = 112;
+      records.forEach((r,i) => {
+        if (y > 270) {
+          doc.addPage();
+          doc.setFillColor(204,0,0);
+          doc.rect(14, 14, 182, 8, 'F');
+          doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(7.5);
+          hdrs.forEach((h,j) => doc.text(h, cols[j], 20));
+          y = 32;
+        }
+        doc.setFillColor(i%2===0?252:247, i%2===0?252:247, i%2===0?252:247);
+        doc.rect(14, y-5, 182, 9, 'F');
+        doc.setTextColor(30,30,30); doc.setFont('helvetica','normal'); doc.setFontSize(7.5);
+        const inTime  = r.emp_in   && r.emp_in.trim()  ? r.emp_in  : '--';
+        const outTime = r.emp_out  && r.emp_out.trim() ? r.emp_out : '--';
+        const rowData = [empId, r.date, inTime, outTime, r.actual_hours||'--', r.remarks||''];
+        rowData.forEach((v,j) => {
+          const txt = String(v||'');
+          // Remarks col gets more space — truncate at 22 chars
+          const limit = j === 5 ? 22 : 12;
+          doc.text(txt.length > limit ? txt.substring(0,limit-1)+'..' : txt, cols[j], y);
+        });
+        y += 9;
+      });
+
+      // Footer
+      doc.setTextColor(150,150,150); doc.setFont('helvetica','normal'); doc.setFontSize(7);
+      doc.text('This is a system-generated document. For queries, contact HR Department.', 105, 287, {align:'center'});
+
+      doc.save('Attendance_' + empId + '_' + empName2.replace(/\s+/g,'-') + '.pdf');
+    }
+
+    loadData();
+  </script>
+</body>
+</html>

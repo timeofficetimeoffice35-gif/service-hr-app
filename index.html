@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Servis Tyres HR Portal</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#cc0000">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Servis HR">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #b80000 0%, #cc0000 40%, #1a1a1a 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .login-container {
+      background: #fff;
+      border-radius: 20px;
+      padding: 40px 32px;
+      width: 90%;
+      max-width: 380px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+      text-align: center;
+    }
+    .logo-wrap {
+      margin-bottom: 24px;
+    }
+    .logo-wrap img {
+      height: 80px;
+      object-fit: contain;
+    }
+    h1 {
+      font-size: 1.1rem;
+      color: #333;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+    .subtitle {
+      font-size: 0.8rem;
+      color: #999;
+      margin-bottom: 32px;
+    }
+    .input-group {
+      margin-bottom: 18px;
+      text-align: left;
+    }
+    label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    input {
+      width: 100%;
+      padding: 13px 16px;
+      border: 2px solid #e8e8e8;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      color: #333;
+      transition: border 0.2s;
+      outline: none;
+      background: #fafafa;
+    }
+    input:focus {
+      border-color: #cc0000;
+      background: #fff;
+    }
+    .btn-login {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #cc0000, #990000);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      margin-top: 8px;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    .btn-login:active { transform: scale(0.98); opacity: 0.9; }
+    .error-msg {
+      color: #cc0000;
+      font-size: 0.82rem;
+      margin-top: 14px;
+      padding: 10px;
+      background: #fff0f0;
+      border-radius: 8px;
+      display: none;
+    }
+    .footer-note {
+      margin-top: 24px;
+      font-size: 0.72rem;
+      color: #bbb;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="logo-wrap">
+      <img src="data:image/jpeg;base64,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" alt="Servis Tyres">
+    </div>
+    <h1>Employee Self Service</h1>
+    <p class="subtitle">HR Portal · Servis Tyres</p>
+
+    <div class="input-group">
+      <label>Employee ID</label>
+      <input type="text" id="empId" placeholder="Enter your Employee ID" autocomplete="off">
+    </div>
+    <div class="input-group">
+      <label>Password</label>
+      <input type="password" id="password" placeholder="Enter your password">
+    </div>
+    <button class="btn-login" onclick="doLogin()">Login</button>
+    <div class="error-msg" id="errorMsg">Invalid Employee ID or Password. Please try again.</div>
+    <p class="footer-note">Password is same as your Employee ID</p>
+  </div>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(()=>{});
+    }
+
+    async function doLogin() {
+      const empId = document.getElementById('empId').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const errEl = document.getElementById('errorMsg');
+      errEl.style.display = 'none';
+
+      if (!empId || !password) {
+        errEl.textContent = 'Please enter Employee ID and Password.';
+        errEl.style.display = 'block'; return;
+      }
+      if (empId !== password) {
+        errEl.textContent = 'Invalid credentials. Password must match Employee ID.';
+        errEl.style.display = 'block'; return;
+      }
+
+      // Verify employee exists in leave data
+      try {
+        const res = await fetch('./leave_data.json');
+        const data = await res.json();
+        if (!data[empId]) {
+          errEl.textContent = 'Employee ID not found in system.';
+          errEl.style.display = 'block'; return;
+        }
+        sessionStorage.setItem('loggedEmpId', empId);
+        sessionStorage.setItem('loggedEmpName', data[empId].emp_name);
+        window.location.href = './dashboard.html';
+      } catch(e) {
+        errEl.textContent = 'Error connecting to data. Please try again.';
+        errEl.style.display = 'block';
+      }
+    }
+
+    document.addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+  </script>
+</body>
+</html>

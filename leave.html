@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Leave Balance - Servis HR</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#cc0000">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f4f6; min-height: 100vh; }
+    header {
+      background: linear-gradient(135deg, #cc0000, #990000);
+      color: #fff;
+      padding: 14px 20px;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .back-btn {
+      background: rgba(255,255,255,0.2); border: none; color: #fff;
+      width: 36px; height: 36px; border-radius: 8px; font-size: 1.1rem;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .header-info { flex: 1; }
+    .header-info h2 { font-size: 1rem; font-weight: 700; }
+    .header-info p { font-size: 0.75rem; opacity: 0.8; margin-top: 2px; }
+    header img { height: 38px; }
+
+    .main { padding: 20px; max-width: 480px; margin: 0 auto; }
+
+    .info-card {
+      background: #fff; border-radius: 14px; padding: 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 16px;
+    }
+    .info-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { font-size: 0.8rem; color: #888; font-weight: 500; }
+    .info-val { font-size: 0.88rem; color: #222; font-weight: 600; text-align: right; }
+
+    .leave-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+    .leave-card {
+      background: #fff; border-radius: 14px; padding: 18px 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08); text-align: center;
+    }
+    .leave-card.casual { border-top: 4px solid #f39c12; }
+    .leave-card.sick { border-top: 4px solid #3498db; }
+    .leave-card.annual { border-top: 4px solid #27ae60; }
+    .leave-type { font-size: 0.7rem; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+    .leave-balance { font-size: 1.6rem; font-weight: 800; margin-bottom: 4px; }
+    .casual .leave-balance { color: #f39c12; }
+    .sick .leave-balance { color: #3498db; }
+    .annual .leave-balance { color: #27ae60; }
+    .leave-sub { font-size: 0.68rem; color: #aaa; }
+
+    .detail-card {
+      background: #fff; border-radius: 14px; padding: 16px 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 20px;
+    }
+    .detail-title { font-size: 0.78rem; font-weight: 700; color: #555; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .detail-table { width: 100%; border-collapse: collapse; }
+    .detail-table th { font-size: 0.7rem; color: #888; font-weight: 600; text-align: left; padding: 4px 6px; border-bottom: 1px solid #eee; }
+    .detail-table td { font-size: 0.8rem; color: #333; padding: 8px 6px; border-bottom: 1px solid #f8f8f8; }
+    .detail-table tr:last-child td { border-bottom: none; }
+
+    .total-bar {
+      background: linear-gradient(135deg, #cc0000, #990000);
+      color: #fff; border-radius: 14px; padding: 18px 20px;
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 16px rgba(204,0,0,0.3);
+    }
+    .total-label { font-size: 0.85rem; opacity: 0.9; }
+    .total-val { font-size: 1.8rem; font-weight: 800; }
+
+    .btn-download {
+      width: 100%; padding: 15px; background: #222; color: #fff;
+      border: none; border-radius: 12px; font-size: 1rem; font-weight: 700;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: opacity 0.2s;
+    }
+    .btn-download:active { opacity: 0.85; }
+
+    .loading { text-align: center; padding: 60px 20px; color: #aaa; }
+  </style>
+</head>
+<body>
+  <header>
+    <button class="back-btn" onclick="window.location.href='dashboard.html'">←</button>
+    <div class="header-info">
+      <h2>Leave Balance</h2>
+      <p id="hdrEmpInfo">Loading...</p>
+    </div>
+    <img src="data:image/jpeg;base64,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" alt="Servis">
+  </header>
+
+  <div class="main" id="mainContent">
+    <div class="loading">Loading leave data...</div>
+  </div>
+
+  <script>
+    const empId = sessionStorage.getItem('loggedEmpId');
+    if (!empId) { window.location.href = './index.html'; }
+
+    let empData = null;
+
+    async function loadData() {
+      try {
+        const res = await fetch('./leave_data.json?v=' + Date.now(), { cache: 'no-store' });
+        const all = await res.json();
+        empData = all[empId];
+        if (!empData) {
+          document.getElementById('mainContent').innerHTML = '<div class="loading">No leave data found for your Employee ID.</div>';
+          return;
+        }
+        renderLeave();
+      } catch(e) {
+        document.getElementById('mainContent').innerHTML = '<div class="loading">Error loading data. Please try again.</div>';
+      }
+    }
+
+    function renderLeave() {
+      const d = empData;
+      document.getElementById('hdrEmpInfo').textContent = d.emp_name + ' · ' + empId;
+
+      const totalBalance = (parseFloat(d.casual_closing)||0) + (parseFloat(d.sick_closing)||0) + (parseFloat(d.annual_closing)||0);
+
+      document.getElementById('mainContent').innerHTML = `
+        <div class="info-card">
+          <div class="info-row"><span class="info-label">Emp ID</span><span class="info-val">${d.emp_id}</span></div>
+          <div class="info-row"><span class="info-label">Employee Name</span><span class="info-val">${d.emp_name}</span></div>
+          <div class="info-row"><span class="info-label">Position</span><span class="info-val">${d.position_name}</span></div>
+          <div class="info-row"><span class="info-label">Date of Joining</span><span class="info-val">${d.doj}</span></div>
+        </div>
+
+        <div class="leave-grid">
+          <div class="leave-card casual">
+            <div class="leave-type">Casual</div>
+            <div class="leave-balance">${d.casual_closing}</div>
+            <div class="leave-sub">Balance</div>
+          </div>
+          <div class="leave-card sick">
+            <div class="leave-type">Sick</div>
+            <div class="leave-balance">${d.sick_closing}</div>
+            <div class="leave-sub">Balance</div>
+          </div>
+          <div class="leave-card annual">
+            <div class="leave-type">Annual</div>
+            <div class="leave-balance">${d.annual_closing}</div>
+            <div class="leave-sub">Balance</div>
+          </div>
+        </div>
+
+        <div class="detail-card">
+          <div class="detail-title">Detailed Breakdown</div>
+          <table class="detail-table">
+            <tr><th>Type</th><th>Allowed</th><th>Availed</th><th>Ded.</th><th>Closing</th></tr>
+            <tr><td>Casual</td><td>${d.casual_allowed}</td><td>${d.casual_availed}</td><td>${d.casual_deducted}</td><td><strong>${d.casual_closing}</strong></td></tr>
+            <tr><td>Sick</td><td>${d.sick_allowed}</td><td>${d.sick_availed}</td><td>${d.sick_deducted}</td><td><strong>${d.sick_closing}</strong></td></tr>
+            <tr><td>Annual</td><td>${d.annual_allowed}</td><td>${d.annual_availed}</td><td>${d.annual_deducted}</td><td><strong>${d.annual_closing}</strong></td></tr>
+          </table>
+        </div>
+
+        <div class="total-bar">
+          <span class="total-label">Total Leave Balance</span>
+          <span class="total-val">${totalBalance.toFixed(2)}</span>
+        </div>
+
+        <button class="btn-download" onclick="downloadPDF()">⬇ Download PDF</button>
+      `;
+    }
+
+    function downloadPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const d = empData;
+
+      // Header bar
+      doc.setFillColor(204, 0, 0);
+      doc.rect(0, 0, 210, 32, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text('SERVIS TYRES', 105, 12, { align: 'center' });
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Leave Balance Report', 105, 20, { align: 'center' });
+      doc.setFontSize(8);
+      doc.text('Generated: ' + new Date().toLocaleDateString('en-PK', {day:'2-digit',month:'short',year:'numeric'}), 105, 28, { align: 'center' });
+
+      // Employee Info
+      doc.setTextColor(30, 30, 30);
+      doc.setFillColor(248, 248, 248);
+      doc.roundedRect(14, 38, 182, 40, 3, 3, 'F');
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(100, 100, 100);
+      doc.text('EMPLOYEE INFORMATION', 20, 46);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(30, 30, 30);
+      doc.setFontSize(9);
+
+      const fields = [
+        ['Emp ID:', d.emp_id, 'Emp Name:', d.emp_name],
+        ['Position:', d.position_name, 'Date of Joining:', d.doj],
+      ];
+      fields.forEach((row, i) => {
+        const y = 54 + i * 12;
+        doc.setFont('helvetica', 'bold'); doc.text(row[0], 20, y);
+        doc.setFont('helvetica', 'normal'); doc.text(row[1], 44, y);
+        doc.setFont('helvetica', 'bold'); doc.text(row[2], 110, y);
+        doc.setFont('helvetica', 'normal'); doc.text(row[3], 138, y);
+      });
+
+      // Leave Balance Cards
+      const cards = [
+        { label: 'Casual Leave', balance: d.casual_closing, color: [243, 156, 18] },
+        { label: 'Sick Leave', balance: d.sick_closing, color: [52, 152, 219] },
+        { label: 'Annual Leave', balance: d.annual_closing, color: [39, 174, 96] },
+      ];
+      const cardW = 55, startX = 14, startY = 86, cardH = 30;
+      cards.forEach((c, i) => {
+        const x = startX + i * (cardW + 5.5);
+        doc.setFillColor(...c.color);
+        doc.roundedRect(x, startY, cardW, cardH, 3, 3, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(18);
+        doc.text(String(c.balance), x + cardW/2, startY + 17, { align: 'center' });
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        doc.text(c.label, x + cardW/2, startY + 26, { align: 'center' });
+      });
+
+      // Detailed Table
+      doc.setTextColor(30, 30, 30);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.text('DETAILED BREAKDOWN', 20, 128);
+
+      // Table header
+      doc.setFillColor(204, 0, 0);
+      doc.rect(14, 132, 182, 8, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'bold');
+      const cols = [20, 70, 106, 136, 166];
+      const headers = ['Leave Type', 'Allowed', 'Availed', 'Deducted', 'Closing Balance'];
+      headers.forEach((h, i) => doc.text(h, cols[i], 138));
+
+      const rows = [
+        ['Casual Leave', d.casual_allowed, d.casual_availed, d.casual_deducted, d.casual_closing],
+        ['Sick Leave', d.sick_allowed, d.sick_availed, d.sick_deducted, d.sick_closing],
+        ['Annual Leave', d.annual_allowed, d.annual_availed, d.annual_deducted, d.annual_closing],
+      ];
+      rows.forEach((row, i) => {
+        const y = 150 + i * 11;
+        doc.setFillColor(i % 2 === 0 ? 252 : 248, i % 2 === 0 ? 252 : 248, i % 2 === 0 ? 252 : 248);
+        doc.rect(14, y - 6, 182, 11, 'F');
+        doc.setTextColor(30, 30, 30);
+        doc.setFont('helvetica', i === 0 ? 'normal' : 'normal');
+        row.forEach((v, j) => {
+          doc.setFont('helvetica', j === 4 ? 'bold' : 'normal');
+          doc.text(String(v), cols[j], y);
+        });
+      });
+
+      // Total bar
+      const total = (parseFloat(d.casual_closing)||0)+(parseFloat(d.sick_closing)||0)+(parseFloat(d.annual_closing)||0);
+      doc.setFillColor(34, 34, 34);
+      doc.roundedRect(14, 186, 182, 14, 3, 3, 'F');
+      doc.setTextColor(255,255,255);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.text('Total Leave Balance', 20, 195);
+      doc.setFontSize(14);
+      doc.text(total.toFixed(2), 190, 195, { align: 'right' });
+
+      // Footer
+      doc.setTextColor(150,150,150);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      doc.text('This is a system-generated document. For queries, contact HR Department.', 105, 280, { align: 'center' });
+      doc.text('Servis Industries Ltd. · Confidential', 105, 285, { align: 'center' });
+
+      doc.save('Leave_Balance_' + d.emp_id + '_' + d.emp_name.replace(/\s+/g,'-') + '.pdf');
+    }
+
+    loadData();
+  </script>
+</body>
+</html>

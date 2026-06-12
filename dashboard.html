@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Dashboard - Servis HR</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#cc0000">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f4f4f6;
+      min-height: 100vh;
+    }
+    header {
+      background: linear-gradient(135deg, #cc0000, #990000);
+      color: #fff;
+      padding: 0;
+    }
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+    }
+    .header-logo img { height: 44px; }
+    .header-title { font-size: 0.85rem; font-weight: 600; text-align: center; }
+    .header-title span { display: block; font-size: 0.7rem; opacity: 0.8; font-weight: 400; }
+    .logout-btn {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    .welcome-bar {
+      background: rgba(0,0,0,0.15);
+      padding: 10px 20px;
+      font-size: 0.82rem;
+    }
+    .welcome-bar strong { font-weight: 700; }
+
+    .main {
+      padding: 30px 20px;
+      max-width: 460px;
+      margin: 0 auto;
+    }
+    .section-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+    }
+    .card-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 28px 16px 24px;
+      text-align: center;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      transition: transform 0.15s, box-shadow 0.15s;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      border: 2px solid transparent;
+    }
+    .card:active { transform: scale(0.97); }
+    .card:hover { border-color: #cc0000; box-shadow: 0 6px 24px rgba(204,0,0,0.15); }
+    .card-icon {
+      width: 60px; height: 60px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 14px;
+      font-size: 26px;
+    }
+    .card-leave .card-icon { background: #fff0f0; }
+    .card-att .card-icon { background: #f0fff4; }
+    .card-name {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #222;
+      margin-bottom: 4px;
+    }
+    .card-desc {
+      font-size: 0.72rem;
+      color: #aaa;
+    }
+    .emp-info-box {
+      background: #fff;
+      border-radius: 14px;
+      padding: 18px 20px;
+      margin-bottom: 24px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .emp-avatar {
+      width: 48px; height: 48px;
+      background: linear-gradient(135deg, #cc0000, #990000);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 1.3rem; font-weight: 700; flex-shrink: 0;
+    }
+    .emp-details .name { font-weight: 700; font-size: 0.95rem; color: #222; }
+    .emp-details .id { font-size: 0.78rem; color: #999; margin-top: 2px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-top">
+      <div class="header-logo">
+        <img src="data:image/jpeg;base64,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" alt="Servis Tyres">
+      </div>
+      <div class="header-title">
+        Employee Portal
+        <span>Self Service</span>
+      </div>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+    <div class="welcome-bar" id="welcomeBar">Welcome, Employee</div>
+  </header>
+
+  <div class="main">
+    <div class="emp-info-box">
+      <div class="emp-avatar" id="empAvatar">?</div>
+      <div class="emp-details">
+        <div class="name" id="empName">Loading...</div>
+        <div class="id" id="empIdDisp">ID: ---</div>
+      </div>
+    </div>
+
+    <p class="section-title">Services</p>
+    <div class="card-grid">
+      <a class="card card-leave" href="leave.html">
+        <div class="card-icon">🏖️</div>
+        <div class="card-name">Leave Balance</div>
+        <div class="card-desc">View & download your leave summary</div>
+      </a>
+      <a class="card card-att" href="attendance.html">
+        <div class="card-icon">📋</div>
+        <div class="card-name">Attendance</div>
+        <div class="card-desc">View & download attendance report</div>
+      </a>
+    </div>
+  </div>
+
+  <script>
+    const empId = sessionStorage.getItem('loggedEmpId');
+    const empName = sessionStorage.getItem('loggedEmpName');
+    if (!empId) { window.location.href = './index.html'; }
+
+    document.getElementById('welcomeBar').textContent = 'Welcome, ' + (empName || empId);
+    document.getElementById('empName').textContent = empName || 'Employee';
+    document.getElementById('empIdDisp').textContent = 'ID: ' + empId;
+    document.getElementById('empAvatar').textContent = (empName || 'E')[0].toUpperCase();
+
+    function logout() {
+      sessionStorage.clear();
+      window.location.href = './index.html';
+    }
+  </script>
+</body>
+</html>
