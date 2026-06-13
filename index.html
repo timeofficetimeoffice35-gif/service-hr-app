@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Servis Tyres HR Portal</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#cc0000">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Servis HR">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #b80000 0%, #cc0000 40%, #1a1a1a 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .login-container {
+      background: #fff;
+      border-radius: 20px;
+      padding: 40px 32px;
+      width: 90%;
+      max-width: 380px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+      text-align: center;
+    }
+    .logo-wrap {
+      margin-bottom: 24px;
+    }
+    .logo-wrap img {
+      height: 80px;
+      object-fit: contain;
+    }
+    h1 {
+      font-size: 1.1rem;
+      color: #333;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+    .subtitle {
+      font-size: 0.8rem;
+      color: #999;
+      margin-bottom: 32px;
+    }
+    .input-group {
+      margin-bottom: 18px;
+      text-align: left;
+    }
+    label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    input {
+      width: 100%;
+      padding: 13px 16px;
+      border: 2px solid #e8e8e8;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      color: #333;
+      transition: border 0.2s;
+      outline: none;
+      background: #fafafa;
+    }
+    input:focus {
+      border-color: #cc0000;
+      background: #fff;
+    }
+    .btn-login {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #cc0000, #990000);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      margin-top: 8px;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    .btn-login:active { transform: scale(0.98); opacity: 0.9; }
+    .info-msg {
+      color: #2e7d32;
+      font-size: 0.82rem;
+      margin-top: 14px;
+      padding: 10px;
+      background: #e8f5e9;
+      border-radius: 8px;
+      display: none;
+    }
+    .error-msg {
+      color: #cc0000;
+      font-size: 0.82rem;
+      margin-top: 14px;
+      padding: 10px;
+      background: #fff0f0;
+      border-radius: 8px;
+      display: none;
+    }
+    .footer-note {
+      margin-top: 24px;
+      font-size: 0.72rem;
+      color: #bbb;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="logo-wrap">
+      <img src="logo.png" alt="Servis Tyres" onerror="this.style.display='none'">
+    </div>
+    <h1>Employee Self Service</h1>
+    <p class="subtitle">HR Portal &middot; Servis Tyres</p>
+
+    <!-- Employee ID -->
+    <div class="input-group">
+      <label>Employee ID</label>
+      <input type="text" id="empId" placeholder="Enter your Employee ID" autocomplete="off">
+    </div>
+
+    <!-- First time: New Password + Confirm Password -->
+    <div id="fieldsSetPassword">
+      <div class="input-group">
+        <label>New Password</label>
+        <input type="password" id="newPassword" placeholder="Create a password" autocomplete="new-password">
+      </div>
+      <div class="input-group">
+        <label>Confirm Password</label>
+        <input type="password" id="confirmPassword" placeholder="Re-enter password" autocomplete="new-password">
+      </div>
+    </div>
+
+    <!-- Returning user: Password only -->
+    <div id="fieldsPassword" style="display:none;">
+      <div class="input-group">
+        <label>Password</label>
+        <input type="password" id="password" placeholder="Enter your saved password">
+      </div>
+    </div>
+
+    <button class="btn-login" onclick="handleSubmit()">Continue</button>
+
+    <div class="info-msg" id="infoMsg"></div>
+    <div class="error-msg" id="errorMsg"></div>
+
+    <p class="footer-note">Type <b>admin4190</b> as password to reset</p>
+  </div>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(()=>{});
+    }
+
+    const RESET_CODE = 'admin4190';
+
+    function showInfo(msg) {
+      const el = document.getElementById('infoMsg');
+      el.textContent = msg;
+      el.style.display = 'block';
+      document.getElementById('errorMsg').style.display = 'none';
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('errorMsg');
+      el.textContent = msg;
+      el.style.display = 'block';
+      document.getElementById('infoMsg').style.display = 'none';
+    }
+
+    function hideMessages() {
+      document.getElementById('errorMsg').style.display = 'none';
+      document.getElementById('infoMsg').style.display = 'none';
+    }
+
+    // Show/hide fields based on whether this empId already has a saved password
+    function updateFields() {
+      const empId = document.getElementById('empId').value.trim();
+      const saved = empId ? localStorage.getItem('pwd_' + empId) : null;
+
+      if (saved) {
+        // Password already saved - show only Password field
+        document.getElementById('fieldsSetPassword').style.display = 'none';
+        document.getElementById('fieldsPassword').style.display = 'block';
+      } else {
+        // First time - show New Password + Confirm Password
+        document.getElementById('fieldsSetPassword').style.display = 'block';
+        document.getElementById('fieldsPassword').style.display = 'none';
+      }
+      hideMessages();
+    }
+
+    // Listen to Employee ID input to toggle fields
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('empId').addEventListener('input', updateFields);
+      // Also check on load (in case browser autofills)
+      setTimeout(updateFields, 100);
+    });
+
+    async function handleSubmit() {
+      hideMessages();
+      const empId = document.getElementById('empId').value.trim();
+
+      if (!empId) { showError('Please enter your Employee ID.'); return; }
+
+      // Check employee exists in data
+      let employeeData;
+      try {
+        const res = await fetch('./leave_data.json');
+        const data = await res.json();
+        if (!data[empId]) { showError('Employee ID not found in system.'); return; }
+        employeeData = data[empId];
+      } catch (e) {
+        showError('Error connecting to data. Please try again.');
+        return;
+      }
+
+      const savedPassword = localStorage.getItem('pwd_' + empId);
+
+      if (savedPassword) {
+        // ====== RETURNING USER: only Password field shown ======
+        const password = document.getElementById('password').value;
+
+        if (!password) { showError('Please enter your password.'); return; }
+
+        // Check for reset code
+        if (password === RESET_CODE) {
+          // Remove saved password
+          localStorage.removeItem('pwd_' + empId);
+          // Clear all inputs
+          document.getElementById('password').value = '';
+          document.getElementById('newPassword').value = '';
+          document.getElementById('confirmPassword').value = '';
+          // Switch back to "first time" fields
+          updateFields();
+          showInfo('Password reset! Now set a new password.');
+          return;
+        }
+
+        // Verify password
+        if (password !== savedPassword) {
+          showError('Incorrect password. Please try again.');
+          return;
+        }
+
+      } else {
+        // ====== FIRST TIME: New Password + Confirm Password ======
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+
+        if (!newPassword || !confirmPassword) {
+          showError('Please enter and confirm your new password.');
+          return;
+        }
+        if (newPassword.length < 4) {
+          showError('Password must be at least 4 characters long.');
+          return;
+        }
+        if (newPassword !== confirmPassword) {
+          showError('Passwords do not match. Please try again.');
+          return;
+        }
+
+        // Save password for this Employee ID
+        localStorage.setItem('pwd_' + empId, newPassword);
+      }
+
+      // Login successful - go to dashboard
+      sessionStorage.setItem('loggedEmpId', empId);
+      sessionStorage.setItem('loggedEmpName', employeeData.emp_name);
+      window.location.href = './dashboard.html';
+    }
+
+    // Enter key submits
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter') handleSubmit();
+    });
+  </script>
+</body>
+</html>
